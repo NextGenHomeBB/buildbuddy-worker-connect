@@ -11,6 +11,7 @@ import { cleanupAuthState } from "@/lib/auth";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const signInPassword = async (e: React.FormEvent) => {
@@ -22,11 +23,29 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast({ title: "Signed in" });
-      window.location.href = "/";
+      await checkInvitesAndRedirect();
     } catch (err: any) {
       toast({ title: "Login failed", description: err?.message ?? String(err) });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkInvitesAndRedirect = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("project_assignments")
+        .select("id")
+        .is("accepted_at", null)
+        .limit(1);
+      if (error) throw error;
+      if ((data ?? []).length > 0) {
+        window.location.href = "/invitations";
+      } else {
+        window.location.href = "/";
+      }
+    } catch {
+      window.location.href = "/";
     }
   };
 
@@ -46,6 +65,40 @@ export default function Login() {
     }
   };
 
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      cleanupAuthState();
+      const { error } = await supabase.auth.verifyOtp({ email, token: otpCode, type: 'email' });
+      if (error) throw error;
+      toast({ title: "Signed in" });
+      await checkInvitesAndRedirect();
+    } catch (err: any) {
+      toast({ title: "OTP failed", description: err?.message ?? String(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signupLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      cleanupAuthState();
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectUrl }
+      });
+      if (error) throw error;
+      toast({ title: "Check your email", description: "We sent you a sign-up link." });
+    } catch (err: any) {
+      toast({ title: "Sign up failed", description: err?.message ?? String(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <MobileLayout title="Login">
       <SEO title="Login" description="Sign in to BuildBuddy Worker" path="/login" />
@@ -79,7 +132,10 @@ export default function Login() {
                 <label className="text-sm">Email</label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
-              <Button type="submit" variant="secondary" disabled={loading}>Send magic link</Button>
+              <div className="flex items-center gap-2">
+                <Button type="submit" variant="secondary" disabled={loading}>Send magic link</Button>
+                <Button type="button" variant="outline" onClick={signupLink} disabled={loading}>Send sign-up link</Button>
+              </div>
             </form>
           </CardContent>
         </Card>

@@ -15,7 +15,8 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Invitations from "./pages/Invitations";
-
+import Settings from "./pages/Settings";
+import { AuthGate } from "@/components/AuthGate";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { networkMode: "offlineFirst", retry: 2, staleTime: 1000 * 30 },
@@ -36,13 +37,14 @@ const App = () => (
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             {/* Protected app routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/invitations" element={<Invitations />} />
-            <Route path="/timer" element={<Timer />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/materials" element={<Materials />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/" element={<AuthGate><Index /></AuthGate>} />
+            <Route path="/invitations" element={<AuthGate><Invitations /></AuthGate>} />
+            <Route path="/timer" element={<AuthGate><Timer /></AuthGate>} />
+            <Route path="/tasks" element={<AuthGate><Tasks /></AuthGate>} />
+            <Route path="/materials" element={<AuthGate><Materials /></AuthGate>} />
+            <Route path="/messages" element={<AuthGate><Messages /></AuthGate>} />
+            <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
+            <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
