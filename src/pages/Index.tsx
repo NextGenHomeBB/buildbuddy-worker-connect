@@ -2,51 +2,34 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ActiveTimer {
   startedAt: number;
 }
 
 export default function Index() {
-  const qc = useQueryClient();
+  
   const { user, loading } = useAuth();
-  const { data: activeTimer } = useQuery<ActiveTimer | null>({
+  const navigate = useNavigate();
+  const { data: activeTimer } = useQuery<any | null>({
     queryKey: ["activeTimer"],
-    enabled: false,
-    initialData: null,
-  });
-
-  const start = useMutation({
-    mutationFn: async () => ({ startedAt: Date.now() }),
-    onSuccess: (data: ActiveTimer) => {
-      qc.setQueryData(["activeTimer"], data);
-      toast({ title: "Clocked in" });
-    },
-  });
-
-  const stop = useMutation({
-    mutationFn: async () => {
-      const timer = qc.getQueryData<ActiveTimer | null>(["activeTimer"]);
-      const logs = (qc.getQueryData<any[]>(["timeLogs"]) ?? []) as any[];
-      if (timer) {
-        logs.unshift({
-          id: crypto.randomUUID(),
-          startedAt: timer.startedAt,
-          stoppedAt: Date.now(),
-          status: "draft",
-        });
-        qc.setQueryData(["timeLogs"], logs);
-      }
-      return true;
-    },
-    onSuccess: () => {
-      qc.setQueryData(["activeTimer"], null);
-      toast({ title: "Clocked out", description: "Review draft in Timer tab" });
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("time_logs")
+        .select("id, started_at, ended_at, status")
+        .eq("status", "draft")
+        .is("ended_at", null)
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -59,8 +42,8 @@ export default function Index() {
     ],
   });
 
-  const runningFor = activeTimer
-    ? Math.floor((Date.now() - activeTimer.startedAt) / 60000)
+  const runningFor = activeTimer?.started_at
+    ? Math.floor((Date.now() - new Date(activeTimer.started_at).getTime()) / 60000)
     : 0;
 
   if (!loading && !user) {

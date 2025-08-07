@@ -213,6 +213,39 @@ export type Database = {
           },
         ]
       }
+      project_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          employer_org_id: string
+          expires_at: string
+          id: string
+          project_id: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          employer_org_id: string
+          expires_at: string
+          id?: string
+          project_id: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          employer_org_id?: string
+          expires_at?: string
+          id?: string
+          project_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       project_participants: {
         Row: {
           created_at: string
@@ -435,6 +468,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_project_invite: {
+        Args: { invite_id: string }
+        Returns: boolean
+      }
       ensure_participant: {
         Args: { project: string; org: string }
         Returns: boolean
