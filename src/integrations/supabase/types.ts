@@ -165,6 +165,135 @@ export type Database = {
         }
         Relationships: []
       }
+      project_assignments: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          employer_org_id: string
+          id: string
+          is_external: boolean
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          employer_org_id: string
+          id?: string
+          is_external?: boolean
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          employer_org_id?: string
+          id?: string
+          is_external?: boolean
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assignments_employer_org_id_fkey"
+            columns: ["employer_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_participants: {
+        Row: {
+          created_at: string
+          org_id: string
+          project_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          project_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          project_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_participants_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_participants_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_rates: {
+        Row: {
+          bill_rate: number
+          cost_rate: number | null
+          currency: string
+          employer_org_id: string
+          id: string
+          project_id: string
+          user_id: string | null
+        }
+        Insert: {
+          bill_rate: number
+          cost_rate?: number | null
+          currency?: string
+          employer_org_id: string
+          id?: string
+          project_id: string
+          user_id?: string | null
+        }
+        Update: {
+          bill_rate?: number
+          cost_rate?: number | null
+          currency?: string
+          employer_org_id?: string
+          id?: string
+          project_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_rates_employer_org_id_fkey"
+            columns: ["employer_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_rates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           budget: number | null
@@ -240,7 +369,10 @@ export type Database = {
       }
       time_logs: {
         Row: {
+          assignment_id: string | null
+          bill_to_org_id: string | null
           created_at: string
+          employer_org_id: string | null
           ended_at: string | null
           id: string
           minutes: number | null
@@ -252,7 +384,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assignment_id?: string | null
+          bill_to_org_id?: string | null
           created_at?: string
+          employer_org_id?: string | null
           ended_at?: string | null
           id?: string
           minutes?: number | null
@@ -264,7 +399,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assignment_id?: string | null
+          bill_to_org_id?: string | null
           created_at?: string
+          employer_org_id?: string | null
           ended_at?: string | null
           id?: string
           minutes?: number | null
@@ -297,9 +435,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_participant: {
+        Args: { project: string; org: string }
+        Returns: boolean
+      }
+      has_org_role: {
+        Args: { check_org: string; roles: string[] }
+        Returns: boolean
+      }
       is_org_member: {
         Args: { check_org: string }
         Returns: boolean
+      }
+      project_owner_org: {
+        Args: { p_id: string }
+        Returns: string
       }
     }
     Enums: {
