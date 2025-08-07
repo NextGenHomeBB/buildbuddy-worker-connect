@@ -8,8 +8,8 @@ import { useState } from "react";
 
 export default function Timer() {
   const qc = useQueryClient();
-  const { data: activeTimer } = useQuery<any>({ queryKey: ["activeTimer"], initialData: null });
-  const { data: timeLogs = [] } = useQuery<any[]>({ queryKey: ["timeLogs"], initialData: [] });
+  const { data: activeTimer } = useQuery<any>({ queryKey: ["activeTimer"], enabled: false, initialData: null });
+  const { data: timeLogs = [] } = useQuery<any[]>({ queryKey: ["timeLogs"], enabled: false, initialData: [] });
 
   const stopAndSave = useMutation({
     mutationFn: async (payload: { note?: string }) => {

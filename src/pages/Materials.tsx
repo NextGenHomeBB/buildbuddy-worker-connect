@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 
 export default function Materials() {
   const qc = useQueryClient();
-  const { data: requests = [] } = useQuery<any[]>({ queryKey: ["materials"], initialData: [] });
+  const { data: requests = [] } = useQuery<any[]>({ queryKey: ["materials"], enabled: false, initialData: [] });
 
   const create = useMutation({
     mutationFn: async (req: any) => {

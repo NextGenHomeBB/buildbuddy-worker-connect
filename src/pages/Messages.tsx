@@ -15,7 +15,7 @@ interface ChatMessage {
 
 export default function Messages() {
   const qc = useQueryClient();
-  const { data: messages = [] } = useQuery<ChatMessage[]>({ queryKey: ["messages"], initialData: [] });
+  const { data: messages = [] } = useQuery<ChatMessage[]>({ queryKey: ["messages"], enabled: false, initialData: [] });
 
   const send = useMutation({
     mutationFn: async (text: string) => {

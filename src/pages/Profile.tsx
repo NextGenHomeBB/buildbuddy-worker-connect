@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 
 export default function Profile() {
-  const { data: timeLogs = [] } = useQuery<any[]>({ queryKey: ["timeLogs"], initialData: [] });
-  const { data: profile = { language: "en" } } = useQuery<{ language: string }>({ queryKey: ["profile"], initialData: { language: "en" } });
+  const { data: timeLogs = [] } = useQuery<any[]>({ queryKey: ["timeLogs"], enabled: false, initialData: [] });
+  const { data: profile = { language: "en" } } = useQuery<{ language: string }>({ queryKey: ["profile"], enabled: false, initialData: { language: "en" } });
 
   const hours = (sinceDays: number) => {
     const since = Date.now() - sinceDays * 24 * 60 * 60 * 1000;

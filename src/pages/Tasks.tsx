@@ -17,6 +17,7 @@ export default function Tasks() {
   const qc = useQueryClient();
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["tasks"],
+    enabled: false,
     initialData: [
       {
         id: "t1",

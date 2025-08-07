@@ -15,6 +15,7 @@ export default function Index() {
   const qc = useQueryClient();
   const { data: activeTimer } = useQuery<ActiveTimer | null>({
     queryKey: ["activeTimer"],
+    enabled: false,
     initialData: null,
   });
 
@@ -49,6 +50,7 @@ export default function Index() {
 
   const { data: tasksDue = [] } = useQuery({
     queryKey: ["tasks"],
+    enabled: false,
     initialData: [
       { id: "t1", title: "Safety check", due: new Date().toISOString(), completed: false },
       { id: "t2", title: "Daily report", due: new Date().toISOString(), completed: false },
