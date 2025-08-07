@@ -71,3 +71,16 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Invites & Company Selector
+- Invitations live at `/invitations`. You can accept (sets `accepted_at=now()`) or decline (deletes the invite).
+- Pick your current employer company via the header chip (top-right). It persists to `localStorage`:
+  - `bb_employer_org_id`
+  - `bb_employer_org_name`
+- RLS ensures you only see organizations and assignments you belong to.
+
+## Environment variables
+- A `.env.example` is included for local development with Vite:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+- Note: Lovable preview does not use `.env`; the Supabase client in `src/integrations/supabase/client.ts` is already configured for you.

@@ -4,7 +4,7 @@ import { Clock, Home, ListCheck, Package, MessageSquare, User } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import SyncStatus from "../SyncStatus";
-
+import CompanyChip from "@/components/CompanyChip";
 const nav = [
   { to: "/", label: "Home", icon: Home },
   { to: "/timer", label: "Timer", icon: Clock },
@@ -22,7 +22,10 @@ export default function MobileLayout({ title, children }: PropsWithChildren<Prop
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b">
         <div className="container flex items-center justify-between h-14">
           <h1 className="text-lg font-semibold">{title}</h1>
-          <SyncStatus />
+          <div className="flex items-center gap-2">
+            <CompanyChip />
+            <SyncStatus />
+          </div>
         </div>
       </header>
 

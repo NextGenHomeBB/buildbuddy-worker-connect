@@ -13,6 +13,8 @@ import Tasks from "./pages/Tasks";
 import Materials from "./pages/Materials";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
+import Login from "./pages/Login";
+import Invitations from "./pages/Invitations";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +33,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            {/* Protected app routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/invitations" element={<Invitations />} />
             <Route path="/timer" element={<Timer />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/materials" element={<Materials />} />

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { NavLink } from "react-router-dom";
 import { Clock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ActiveTimer {
   startedAt: number;
@@ -13,6 +14,7 @@ interface ActiveTimer {
 
 export default function Index() {
   const qc = useQueryClient();
+  const { user, loading } = useAuth();
   const { data: activeTimer } = useQuery<ActiveTimer | null>({
     queryKey: ["activeTimer"],
     enabled: false,
@@ -60,6 +62,25 @@ export default function Index() {
   const runningFor = activeTimer
     ? Math.floor((Date.now() - activeTimer.startedAt) / 60000)
     : 0;
+
+  if (!loading && !user) {
+    return (
+      <MobileLayout title="Home">
+        <SEO title="Login required" description="Sign in to access your projects" path="/" />
+        <section className="grid gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Welcome</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">Please sign in to continue.</div>
+              <NavLink to="/login" className="underline text-primary">Go to Login →</NavLink>
+            </CardContent>
+          </Card>
+        </section>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout title="Home">
