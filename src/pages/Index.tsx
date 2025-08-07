@@ -57,7 +57,7 @@ export default function Index() {
             </CardHeader>
             <CardContent className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">Please sign in to continue.</div>
-              <NavLink to="/login" className="underline text-primary">Go to Login →</NavLink>
+              <NavLink to="/auth" className="underline text-primary">Go to Login →</NavLink>
             </CardContent>
           </Card>
         </section>
@@ -73,18 +73,18 @@ export default function Index() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Clock /> Quick Clock</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {activeTimer ? `Running for ~${runningFor} min` : "You are off the clock"}
-            </div>
-            {activeTimer ? (
-              <Button variant="destructive" onClick={() => stop.mutate()}>Clock out</Button>
-            ) : (
-              <Button variant="hero" onClick={() => start.mutate()}>Clock in</Button>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                {activeTimer ? `Running for ~${runningFor} min` : "You are off the clock"}
+              </div>
+              {activeTimer ? (
+                <Button variant="destructive" onClick={() => navigate("/timer")}>Clock out</Button>
+              ) : (
+                <Button variant="hero" onClick={() => navigate("/timer")}>Clock in</Button>
+              )}
+            </CardContent>
+          </Card>
 
         <Card>
           <CardHeader>

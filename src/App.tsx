@@ -16,6 +16,9 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Invitations from "./pages/Invitations";
 import Settings from "./pages/Settings";
+import SettingsCompany from "./pages/SettingsCompany";
+import Auth from "./pages/Auth";
+import UpdatePassword from "./pages/UpdatePassword";
 import { AuthGate } from "@/components/AuthGate";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +38,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/update-password" element={<UpdatePassword />} />
             <Route path="/login" element={<Login />} />
             {/* Protected app routes */}
             <Route path="/" element={<AuthGate><Index /></AuthGate>} />
@@ -45,6 +50,7 @@ const App = () => (
             <Route path="/messages" element={<AuthGate><Messages /></AuthGate>} />
             <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
             <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
+            <Route path="/settings/company" element={<AuthGate><SettingsCompany /></AuthGate>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

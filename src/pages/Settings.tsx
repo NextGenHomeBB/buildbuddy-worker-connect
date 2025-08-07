@@ -11,7 +11,7 @@ export default function Settings() {
     try {
       cleanupAuthState();
       try { await supabase.auth.signOut({ scope: 'global' }); } catch {}
-      window.location.href = "/login";
+      window.location.href = "/auth";
     } catch (e: any) {
       toast({ title: "Sign out failed", description: e?.message ?? String(e) });
     }

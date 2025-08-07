@@ -20,7 +20,7 @@ export function AuthGate({ children }: PropsWithChildren) {
     return (
       <>
         <SEO title="Login required" description="Please sign in" noIndex />
-        <Navigate to="/login" replace state={{ from: location }} />
+        <Navigate to="/auth" replace state={{ from: location }} />
       </>
     );
   }
