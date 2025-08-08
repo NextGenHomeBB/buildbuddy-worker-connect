@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export type OrgOption = { id: string; name: string };
 
@@ -18,6 +21,10 @@ export function CompanySelector({
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<OrgOption[]>([]);
   const [value, setValue] = useState<string>("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newOrgName, setNewOrgName] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!open) return;
@@ -62,6 +69,39 @@ export function CompanySelector({
 
   const canSave = useMemo(() => !!value, [value]);
 
+  const createOrganization = async () => {
+    if (!newOrgName.trim()) return;
+    
+    setCreating(true);
+    try {
+      const { data, error } = await supabase.rpc('create_org_with_admin', {
+        org_name: newOrgName.trim()
+      });
+
+      if (error) throw error;
+
+      const newOrg = { id: data, name: newOrgName.trim() };
+      setOptions([newOrg]);
+      setValue(data);
+      setShowCreateForm(false);
+      setNewOrgName("");
+      
+      toast({
+        title: "Organization created",
+        description: `${newOrgName} has been created successfully.`,
+      });
+    } catch (error) {
+      console.error('Error creating organization:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create organization. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -69,36 +109,85 @@ export function CompanySelector({
           <DialogTitle>Select your company</DialogTitle>
         </DialogHeader>
         <div className="grid gap-3">
-          <Select onValueChange={setValue} value={value}>
-            <SelectTrigger>
-              <SelectValue placeholder={loading ? "Loading..." : "Choose company"} />
-            </SelectTrigger>
-            <SelectContent>
-              {!loading && options.length === 0 ? (
-                <SelectItem disabled value="__none">No companies found</SelectItem>
-              ) : (
-                options.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                ))
+          {!showCreateForm ? (
+            <>
+              <Select onValueChange={setValue} value={value}>
+                <SelectTrigger>
+                  <SelectValue placeholder={loading ? "Loading..." : "Choose company"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {!loading && options.length === 0 ? (
+                    <SelectItem disabled value="__none">No companies found</SelectItem>
+                  ) : (
+                    options.map((o) => (
+                      <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {!loading && options.length === 0 && (
+                <div className="space-y-3">
+                  <div className="text-sm text-muted-foreground">
+                    You're not assigned to any companies yet. You can create your own organization to get started.
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowCreateForm(true)}
+                    className="w-full"
+                  >
+                    Create Organization
+                  </Button>
+                </div>
               )}
-            </SelectContent>
-          </Select>
-          {!loading && options.length === 0 && (
-            <div className="text-sm text-muted-foreground">You’re not assigned to any companies yet — ask your manager to invite you.</div>
-          )
-          }
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                const org = options.find((o) => o.id === value);
-                if (org) onSelected(org);
-              }}
-              disabled={!canSave}
-            >
-              Save
-            </Button>
-          </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button
+                  onClick={() => {
+                    const org = options.find((o) => o.id === value);
+                    if (org) onSelected(org);
+                  }}
+                  disabled={!canSave}
+                >
+                  Save
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-3">
+                <Label htmlFor="orgName">Organization Name</Label>
+                <Input
+                  id="orgName"
+                  placeholder="Enter organization name"
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newOrgName.trim()) {
+                      createOrganization();
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setNewOrgName("");
+                  }}
+                  disabled={creating}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={createOrganization}
+                  disabled={!newOrgName.trim() || creating}
+                >
+                  {creating ? "Creating..." : "Create"}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
