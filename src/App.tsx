@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +23,7 @@ import AuthRoute from "./routes/auth";
 import UpdatePassword from "./pages/UpdatePassword";
 import LogoutRoute from "./routes/logout";
 import { AuthGate } from "@/components/AuthGate";
+import OfflineSyncBanner from "@/components/OfflineSyncBanner";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { networkMode: "offlineFirst", retry: 2, staleTime: 1000 * 30 },
@@ -31,6 +33,10 @@ const queryClient = new QueryClient({
 
 const persister = createAsyncStoragePersister({ storage: localforage });
 
+// New pages
+import IncidentsNew from "./pages/IncidentsNew";
+import MaterialsRequest from "./pages/MaterialsRequest";
+
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
     <HelmetProvider>
@@ -38,6 +44,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <OfflineSyncBanner />
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<AuthRoute />} />
@@ -50,8 +57,10 @@ const App = () => (
             <Route path="/timer" element={<AuthGate><Timer /></AuthGate>} />
             <Route path="/tasks" element={<AuthGate><Tasks /></AuthGate>} />
             <Route path="/materials" element={<AuthGate><Materials /></AuthGate>} />
+            <Route path="/materials/request" element={<AuthGate><MaterialsRequest /></AuthGate>} />
             <Route path="/messages" element={<AuthGate><Messages /></AuthGate>} />
             <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
+            <Route path="/incidents/new" element={<AuthGate><IncidentsNew /></AuthGate>} />
             <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
             <Route path="/settings/company" element={<AuthGate><SettingsCompany /></AuthGate>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

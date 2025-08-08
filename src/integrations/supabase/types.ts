@@ -14,6 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      checklist_items: {
+        Row: {
+          checklist_id: string
+          created_at: string
+          done: boolean
+          id: string
+          org_id: string
+          project_id: string
+          seq: number
+          task_id: string
+          title: string
+        }
+        Insert: {
+          checklist_id: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          org_id: string
+          project_id: string
+          seq?: number
+          task_id: string
+          title: string
+        }
+        Update: {
+          checklist_id?: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          org_id?: string
+          project_id?: string
+          seq?: number
+          task_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklists: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          project_id: string
+          task_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          project_id: string
+          task_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          project_id?: string
+          task_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklists_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           created_at: string
@@ -216,6 +316,47 @@ export type Database = {
           },
         ]
       }
+      project_budget_lines: {
+        Row: {
+          category: string
+          created_at: string
+          currency: string
+          id: string
+          name: string
+          org_id: string
+          planned_amount: number | null
+          project_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          currency?: string
+          id?: string
+          name: string
+          org_id: string
+          planned_amount?: number | null
+          project_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          name?: string
+          org_id?: string
+          planned_amount?: number | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_lines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_invites: {
         Row: {
           accepted_at: string | null
@@ -278,6 +419,41 @@ export type Database = {
           },
           {
             foreignKeyName: "project_participants_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_phases: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          project_id: string
+          seq: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          project_id: string
+          seq?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          project_id?: string
+          seq?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_phases_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -371,7 +547,10 @@ export type Database = {
           created_at: string
           due_date: string | null
           id: string
+          org_id: string | null
+          phase_id: string | null
           project_id: string
+          seq: number
           status: string
           title: string
         }
@@ -380,7 +559,10 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          org_id?: string | null
+          phase_id?: string | null
           project_id: string
+          seq?: number
           status?: string
           title: string
         }
@@ -389,11 +571,21 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          org_id?: string | null
+          phase_id?: string | null
           project_id?: string
+          seq?: number
           status?: string
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_phase_fk"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]
@@ -468,7 +660,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_project_budget_summary: {
+        Row: {
+          actual_hours: number | null
+          currency: string | null
+          planned_total: number | null
+          project_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_lines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_project_invite: {
