@@ -1,7 +1,7 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useAssignments } from "@/hooks/tasks/useAssignments";
 import { usePhasesByProjects } from "@/hooks/tasks/usePhasesByProjects";
@@ -78,7 +78,7 @@ export default function Tasks() {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "task_checklists" },
+        { event: "*", schema: "public", table: "checklists" },
         () => {
           console.log("[realtime] task_checklists changed");
           if (activeTask?.id) qc.invalidateQueries({ queryKey: ["task-checklists", activeTask.id] });
@@ -86,7 +86,7 @@ export default function Tasks() {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "task_checklist_items" },
+        { event: "*", schema: "public", table: "checklist_items" },
         () => {
           console.log("[realtime] task_checklist_items changed");
           if (activeTask?.id) qc.invalidateQueries({ queryKey: ["task-checklists", activeTask.id] });

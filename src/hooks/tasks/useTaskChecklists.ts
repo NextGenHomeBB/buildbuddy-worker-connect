@@ -7,9 +7,7 @@ export type ChecklistItem = {
   checklist_id: string;
   text: string;
   done: boolean;
-  photo_path: string | null;
   position: number;
-  updated_at: string;
 };
 
 export type Checklist = {
@@ -26,21 +24,47 @@ export function useTaskChecklists(taskId: string | null) {
     queryKey: ["task-checklists", taskId],
     enabled,
     queryFn: async () => {
-      // Use embedded relationship to load items along with checklists
-      const { data, error } = await supabase
-        .from("task_checklists")
-        .select("id, title, position, items:task_checklist_items(id, checklist_id, text, done, photo_path, position, updated_at)")
+      // Load checklists for the task, then items in bulk
+      const { data: clData, error: clErr } = await supabase
+        .from("checklists" as any)
+        .select("id, title, project_id, task_id, created_at")
         .eq("task_id", taskId as string)
-        .order("position", { ascending: true });
+        .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      if (clErr) throw clErr;
+      const checklists = (clData ?? []) as any[];
+      const checklistIds = checklists.map((c) => c.id);
+      if (checklistIds.length === 0) return [];
 
-      // Ensure items are sorted by position
-      const lists = (data ?? []).map((cl: any) => ({
+      const { data: itemsData, error: itemsErr } = await supabase
+        .from("checklist_items" as any)
+        .select("id, checklist_id, title, done, seq, created_at")
+        .in("checklist_id", checklistIds);
+
+      if (itemsErr) throw itemsErr;
+
+      const itemsByChecklist: Record<string, any[]> = {};
+      (itemsData ?? []).forEach((it: any) => {
+        const arr = itemsByChecklist[it.checklist_id] || (itemsByChecklist[it.checklist_id] = []);
+        arr.push(it);
+      });
+
+      const lists = checklists.map((cl: any, idx: number) => ({
         id: cl.id,
         title: cl.title,
-        position: cl.position,
-        items: (cl.items ?? []).sort((a: any, b: any) => a.position - b.position),
+        position: idx,
+        items: (itemsByChecklist[cl.id] || [])
+          .sort((a: any, b: any) => (a.seq ?? 0) - (b.seq ?? 0))
+          .map(
+            (it: any) =>
+              ({
+                id: it.id,
+                checklist_id: it.checklist_id,
+                text: it.title,
+                done: !!it.done,
+                position: it.seq ?? 0,
+              } as ChecklistItem)
+          ),
       })) as Checklist[];
 
       return lists;

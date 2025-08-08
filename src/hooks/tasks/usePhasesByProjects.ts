@@ -17,13 +17,19 @@ export function usePhasesByProjects(projectIds: string[]) {
     enabled,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("phases")
-        .select("id, project_id, name, order_no")
+        .from("project_phases" as any)
+        .select("id, project_id, name, seq")
         .in("project_id", projectIds)
-        .order("order_no", { ascending: true });
+        .order("seq", { ascending: true });
 
       if (error) throw error;
-      return (data ?? []) as Phase[];
+      const rows = (data ?? []) as any[];
+      return rows.map((r) => ({
+        id: r.id,
+        project_id: r.project_id,
+        name: r.name,
+        order_no: r.seq ?? 0,
+      })) as Phase[];
     },
     placeholderData: [],
     initialData: [],

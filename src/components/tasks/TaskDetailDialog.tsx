@@ -1,9 +1,9 @@
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTaskChecklists, ChecklistItem } from "@/hooks/tasks/useTaskChecklists";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,8 +23,8 @@ export default function TaskDetailDialog({ open, onOpenChange, task }: Props) {
     mutationFn: async (item: ChecklistItem) => {
       const next = !item.done;
       const { error } = await supabase
-        .from("task_checklist_items")
-        .update({ done: next })
+        .from("checklist_items" as any)
+        .update({ done: next } as any)
         .eq("id", item.id);
       if (error) throw error;
       return { id: item.id, done: next };
@@ -51,38 +51,9 @@ export default function TaskDetailDialog({ open, onOpenChange, task }: Props) {
     },
   });
 
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  
 
-  const uploadPhoto = useMutation({
-    mutationFn: async ({ item, file }: { item: ChecklistItem; file: File }) => {
-      const path = `${task!.id}/${item.id}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("task-photos")
-        .upload(path, file, { upsert: false });
-      if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("task_checklist_items")
-        .update({ photo_path: path })
-        .eq("id", item.id);
-      if (updateError) throw updateError;
-
-      return path;
-    },
-    onSuccess: () => {
-      toast({ title: "Photo attached" });
-      qc.invalidateQueries({ queryKey: ["task-checklists", task?.id] });
-    },
-    onError: (e: any) => {
-      toast({ title: "Upload failed", description: e?.message || String(e) });
-    },
-  });
-
-  const publicUrlFor = (path?: string | null) => {
-    if (!path) return null;
-    const { data } = supabase.storage.from("task-photos").getPublicUrl(path);
-    return data?.publicUrl ?? null;
-  };
 
   const content = useMemo(() => {
     if (!lists || lists.length === 0) {
@@ -94,59 +65,22 @@ export default function TaskDetailDialog({ open, onOpenChange, task }: Props) {
           <div key={cl.id} className="space-y-2">
             <div className="font-medium">{cl.title}</div>
             <ul className="space-y-2">
-              {cl.items.map((it) => {
-                const url = publicUrlFor(it.photo_path);
-                return (
-                  <li key={it.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={it.id}
-                      checked={it.done}
-                      onCheckedChange={() => toggleItem.mutate(it)}
-                    />
-                    <label htmlFor={it.id} className="text-sm flex-1">{it.text}</label>
-
-                    {url ? (
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs underline text-primary"
-                      >
-                        View photo
-                      </a>
-                    ) : (
-                      <>
-                        <input
-                          ref={(el) => (fileInputRefs.current[it.id] = el)}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            uploadPhoto.mutate({ item: it, file });
-                            // reset value to allow re-uploading the same file name
-                            e.currentTarget.value = "";
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRefs.current[it.id]?.click()}
-                        >
-                          Add photo
-                        </Button>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
+              {cl.items.map((it) => (
+                <li key={it.id} className="flex items-center gap-2">
+                  <Checkbox
+                    id={it.id}
+                    checked={it.done}
+                    onCheckedChange={() => toggleItem.mutate(it)}
+                  />
+                  <label htmlFor={it.id} className="text-sm flex-1">{it.text}</label>
+                </li>
+              ))}
             </ul>
           </div>
         ))}
       </div>
     );
-  }, [lists, toggleItem, uploadPhoto]);
+  }, [lists, toggleItem]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -23,13 +23,21 @@ export function useTasksByProjects(projectIds: string[]) {
       // We fetch tasks within the assigned projects. RLS may require org membership;
       // if the current user is not allowed, this will throw and React Query will show the error state.
       const { data, error } = await supabase
-        .from("tasks")
-        .select("id, title, status, assignee, project_id, phase_id")
+        .from("tasks" as any)
+        .select("*")
         .in("project_id", projectIds)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data ?? []) as TaskRow[];
+      const rows = (data ?? []) as any[];
+      return rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        status: r.status,
+        assignee: r.assignee ?? null,
+        project_id: r.project_id,
+        phase_id: r.phase_id ?? null,
+      })) as TaskRow[];
     },
     placeholderData: [],
     initialData: [],
