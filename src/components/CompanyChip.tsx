@@ -10,54 +10,95 @@ export default function CompanyChip() {
   const [open, setOpen] = useState(false);
   const [org, setOrg] = useState<OrgOption | null>(null);
 
-  // Load from storage, validate membership
+  // Load from storage, validate membership or assignment
   useEffect(() => {
     const storedId = localStorage.getItem(STORAGE_ID);
     const storedName = localStorage.getItem(STORAGE_NAME);
     if (!storedId) return;
     (async () => {
-      // Ensure user is still a member of this org
-      const { data: memberships } = await supabase
-        .from("organization_members")
-        .select("org_id")
-        .eq("org_id", storedId)
-        .limit(1);
-      if ((memberships ?? []).length === 1) {
-        setOrg({ id: storedId, name: storedName || "Selected company" });
-      } else {
-        localStorage.removeItem(STORAGE_ID);
-        localStorage.removeItem(STORAGE_NAME);
-        setOrg(null);
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const uid = userData.user?.id;
+
+        const [{ data: memberships }, { data: assigns }] = await Promise.all([
+          supabase
+            .from("organization_members")
+            .select("org_id")
+            .eq("org_id", storedId)
+            .limit(1),
+          uid
+            ? supabase
+                .from("project_assignments")
+                .select("id")
+                .eq("user_id", uid)
+                .eq("employer_org_id", storedId)
+                .limit(1)
+            : supabase.from("project_assignments").select("id").eq("employer_org_id", storedId).limit(1),
+        ]);
+
+        const hasMembership = (memberships ?? []).length === 1;
+        const hasAssignment = (assigns ?? []).length === 1;
+
+        if (hasMembership || hasAssignment) {
+          setOrg({ id: storedId, name: storedName || "Selected company" });
+        } else {
+          localStorage.removeItem(STORAGE_ID);
+          localStorage.removeItem(STORAGE_NAME);
+          setOrg(null);
+        }
+      } catch (e) {
+        console.error(e);
       }
     })();
   }, []);
 
-  // If multiple memberships and none selected, require selection; if exactly one, auto-select
+  // If multiple memberships/assignments and none selected, require selection; if exactly one, auto-select
   useEffect(() => {
     (async () => {
       if (org) return;
       const storedId = localStorage.getItem(STORAGE_ID);
       if (storedId) return;
-      const { data: memberships } = await supabase
-        .from("organization_members")
-        .select("org_id")
-        .order("created_at", { ascending: false });
-      const ids = Array.from(new Set((memberships ?? []).map((m: any) => m.org_id)));
-      if (ids.length === 0) return;
-      if (ids.length === 1) {
-        const { data: orgs } = await supabase
-          .from("organizations")
-          .select("id, name")
-          .in("id", ids)
-          .limit(1);
-        const only = (orgs ?? [])[0];
-        if (only) {
-          localStorage.setItem(STORAGE_ID, only.id);
-          localStorage.setItem(STORAGE_NAME, only.name);
-          setOrg({ id: only.id, name: only.name });
+
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const uid = userData.user?.id;
+
+        const [{ data: memberships }, { data: assignments }] = await Promise.all([
+          supabase
+            .from("organization_members")
+            .select("org_id")
+            .order("created_at", { ascending: false }),
+          uid
+            ? supabase
+                .from("project_assignments")
+                .select("employer_org_id")
+                .eq("user_id", uid)
+            : supabase.from("project_assignments").select("employer_org_id"),
+        ]);
+
+        const memberIds = (memberships ?? []).map((m: any) => m.org_id);
+        const employerIds = (assignments ?? []).map((a: any) => a.employer_org_id);
+        const ids = Array.from(new Set([...memberIds, ...employerIds].filter(Boolean)));
+
+        if (ids.length === 0) return;
+        if (ids.length === 1) {
+          const onlyId = ids[0];
+          const { data: orgs } = await supabase
+            .from("organizations")
+            .select("id, name")
+            .in("id", ids)
+            .limit(1);
+          const only = (orgs ?? [])[0];
+          if (only) {
+            localStorage.setItem(STORAGE_ID, only.id);
+            localStorage.setItem(STORAGE_NAME, only.name);
+            setOrg({ id: only.id, name: only.name });
+          }
+        } else {
+          setOpen(true);
         }
-      } else {
-        setOpen(true);
+      } catch (e) {
+        console.error(e);
       }
     })();
   }, [org]);

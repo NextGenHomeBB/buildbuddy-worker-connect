@@ -129,18 +129,21 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          whatsapp_phone: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
           id?: string
           name: string
+          whatsapp_phone?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
           id?: string
           name?: string
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }
@@ -471,6 +474,10 @@ export type Database = {
       accept_project_invite: {
         Args: { invite_id: string }
         Returns: boolean
+      }
+      create_org_with_admin: {
+        Args: { org_name: string }
+        Returns: string
       }
       ensure_participant: {
         Args: { project: string; org: string }

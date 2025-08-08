@@ -23,25 +23,40 @@ export function CompanySelector({
     if (!open) return;
     (async () => {
       setLoading(true);
-      // Get organizations where the user is a member
-      const { data: memberships } = await supabase
-        .from("organization_members")
-        .select("org_id")
-        .order("created_at", { ascending: false });
+      try {
+        // Current user id for filtering assignments
+        const { data: userData } = await supabase.auth.getUser();
+        const uid = userData.user?.id;
 
-      const ids = Array.from(new Set((memberships ?? []).map((m: any) => m.org_id)));
-      if (ids.length === 0) {
+        // Fetch org memberships and employer orgs from assignments in parallel
+        const [{ data: memberships }, { data: assignments }] = await Promise.all([
+          supabase.from("organization_members").select("org_id").order("created_at", { ascending: false }),
+          uid
+            ? supabase.from("project_assignments").select("employer_org_id").eq("user_id", uid)
+            : supabase.from("project_assignments").select("employer_org_id"),
+        ]);
+
+        const memberIds = (memberships ?? []).map((m: any) => m.org_id);
+        const employerIds = (assignments ?? []).map((a: any) => a.employer_org_id);
+        const ids = Array.from(new Set([...memberIds, ...employerIds].filter(Boolean)));
+
+        if (ids.length === 0) {
+          setOptions([]);
+          return;
+        }
+
+        const { data: orgs } = await supabase
+          .from("organizations")
+          .select("id, name")
+          .in("id", ids);
+
+        setOptions((orgs ?? []).map((o: any) => ({ id: o.id, name: o.name })));
+      } catch (e) {
+        console.error(e);
         setOptions([]);
+      } finally {
         setLoading(false);
-        return;
       }
-      const { data: orgs } = await supabase
-        .from("organizations")
-        .select("id, name")
-        .in("id", ids);
-
-      setOptions((orgs ?? []).map((o: any) => ({ id: o.id, name: o.name })));
-      setLoading(false);
     })();
   }, [open]);
 
@@ -59,11 +74,19 @@ export function CompanySelector({
               <SelectValue placeholder={loading ? "Loading..." : "Choose company"} />
             </SelectTrigger>
             <SelectContent>
-              {options.map((o) => (
-                <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-              ))}
+              {!loading && options.length === 0 ? (
+                <SelectItem disabled value="__none">No companies found</SelectItem>
+              ) : (
+                options.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
+          {!loading && options.length === 0 && (
+            <div className="text-sm text-muted-foreground">You’re not assigned to any companies yet — ask your manager to invite you.</div>
+          )
+          }
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button
