@@ -1,3 +1,4 @@
+
 import MobileLayout from "@/components/layout/MobileLayout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,23 @@ export default function Index() {
       if (error) throw error;
       return data;
     },
+  });
+
+  // New: check whether the user has any accepted assignments
+  const { data: myProjectIds = [], isLoading: loadingAssignments } = useQuery({
+    queryKey: ["my-assignments", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_assignments")
+        .select("project_id")
+        .eq("user_id", user!.id)
+        .not("accepted_at", "is", null);
+      if (error) throw error;
+      return Array.from(new Set((data ?? []).map((r: any) => r.project_id).filter(Boolean)));
+    },
+    placeholderData: [],
+    initialData: [],
   });
 
   const stopAndSubmit = useMutation({
@@ -91,6 +109,13 @@ export default function Index() {
   return (
     <MobileLayout title="Home">
       <SEO title="Home" description="Clock in/out, see shifts and tasks" path="/" />
+
+      {/* Empty state when the user has no accepted assignments */}
+      {user && !loadingAssignments && myProjectIds.length === 0 && (
+        <div className="rounded-lg border p-3 mb-4 text-sm text-muted-foreground">
+          No projects yet — once you’re assigned and accept the invitation, your projects will appear here.
+        </div>
+      )}
 
       {activeTimer && (
         <div className="rounded-lg border p-3 mb-4 flex items-center justify-between">
@@ -152,3 +177,4 @@ export default function Index() {
     </MobileLayout>
   );
 }
+
