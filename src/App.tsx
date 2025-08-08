@@ -17,8 +17,9 @@ import Login from "./pages/Login";
 import Invitations from "./pages/Invitations";
 import Settings from "./pages/Settings";
 import SettingsCompany from "./pages/SettingsCompany";
-import Auth from "./pages/Auth";
+import AuthRoute from "./routes/auth";
 import UpdatePassword from "./pages/UpdatePassword";
+import LogoutRoute from "./routes/logout";
 import { AuthGate } from "@/components/AuthGate";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,9 +39,10 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth" element={<AuthRoute />} />
             <Route path="/auth/update-password" element={<UpdatePassword />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/logout" element={<LogoutRoute />} />
             {/* Protected app routes */}
             <Route path="/" element={<AuthGate><Index /></AuthGate>} />
             <Route path="/invitations" element={<AuthGate><Invitations /></AuthGate>} />
