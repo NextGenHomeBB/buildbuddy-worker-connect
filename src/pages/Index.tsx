@@ -57,7 +57,7 @@ export default function Index() {
   });
 
   const { data: tasksDue = [] } = useQuery({
-    queryKey: ["tasks"],
+    queryKey: ["tasks-due-today"],
     enabled: false,
     initialData: [
       { id: "t1", title: "Safety check", due: new Date().toISOString(), completed: false },

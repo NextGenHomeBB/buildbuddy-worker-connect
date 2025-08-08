@@ -18,6 +18,7 @@ export default function Tasks() {
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["tasks"],
     enabled: false,
+    placeholderData: [],
     initialData: [
       {
         id: "t1",
@@ -62,7 +63,7 @@ export default function Tasks() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {t.checklist.map((c) => (
+                {(t.checklist ?? []).map((c) => (
                   <li key={c.id} className="flex items-center gap-2">
                     <Checkbox id={c.id} checked={c.done} onCheckedChange={() => toggle.mutate({ taskId: t.id, itemId: c.id })} />
                     <label htmlFor={c.id} className="text-sm">{c.text}</label>
