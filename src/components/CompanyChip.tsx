@@ -32,8 +32,14 @@ export default function CompanyChip() {
                 .select("id")
                 .eq("user_id", uid)
                 .eq("employer_org_id", storedId)
+                .not("accepted_at", "is", null)
                 .limit(1)
-            : supabase.from("project_assignments").select("id").eq("employer_org_id", storedId).limit(1),
+            : supabase
+                .from("project_assignments")
+                .select("id")
+                .eq("employer_org_id", storedId)
+                .not("accepted_at", "is", null)
+                .limit(1),
         ]);
 
         const hasMembership = (memberships ?? []).length === 1;
@@ -73,7 +79,11 @@ export default function CompanyChip() {
                 .from("project_assignments")
                 .select("employer_org_id")
                 .eq("user_id", uid)
-            : supabase.from("project_assignments").select("employer_org_id"),
+                .not("accepted_at", "is", null)
+            : supabase
+                .from("project_assignments")
+                .select("employer_org_id")
+                .not("accepted_at", "is", null),
         ]);
 
         const memberIds = (memberships ?? []).map((m: any) => m.org_id);

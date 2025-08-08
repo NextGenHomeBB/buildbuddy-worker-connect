@@ -5,7 +5,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import localforage from "localforage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Timer from "./pages/Timer";
@@ -28,7 +29,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const persister = createSyncStoragePersister({ storage: window.localStorage });
+const persister = createAsyncStoragePersister({ storage: localforage });
 
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>

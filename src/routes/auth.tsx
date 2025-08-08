@@ -22,20 +22,29 @@ export default function AuthRoute() {
 
   const postLoginRedirect = useMemo(() => async (userId: string) => {
     try {
-      // Pending direct assignments (not yet accepted)
-      const { data: pending, error: pendErr } = await supabase
+      // 1) Pending direct assignments
+      const { data: pendingA, error: pendErr } = await supabase
         .from("project_assignments")
         .select("id")
         .eq("user_id", userId)
         .is("accepted_at", null)
         .limit(1);
       if (pendErr) throw pendErr;
-      if ((pending ?? []).length > 0) {
+
+      // 2) Pending email invites (RLS filters by auth email)
+      const { data: pendingI, error: invErr } = await supabase
+        .from("project_invites")
+        .select("id")
+        .is("accepted_at", null)
+        .limit(1);
+      if (invErr) throw invErr;
+
+      if ((pendingA ?? []).length > 0 || (pendingI ?? []).length > 0) {
         window.location.href = "/invitations";
         return;
       }
 
-      // Accepted assignments and distinct employer orgs
+      // 3) Accepted assignments -> derive selectable companies
       const { data: accepted, error: accErr } = await supabase
         .from("project_assignments")
         .select("employer_org_id")
@@ -43,14 +52,20 @@ export default function AuthRoute() {
         .not("accepted_at", "is", null);
       if (accErr) throw accErr;
       const orgs = Array.from(new Set((accepted ?? []).map((a: any) => a.employer_org_id).filter(Boolean)));
-      if (orgs.length > 1) {
-        window.location.href = "/settings/company";
-        return;
+
+      const stored = localStorage.getItem("employer_org_id");
+      if (!stored) {
+        if (orgs.length === 1) {
+          localStorage.setItem("employer_org_id", orgs[0]);
+        } else {
+          // No company selected yet and multiple options
+          window.location.href = "/settings/company";
+          return;
+        }
       }
-      if (orgs.length === 1) {
-        localStorage.setItem("employer_org_id", orgs[0]);
-      }
-      window.location.href = "/timer";
+
+      // 4) Home
+      window.location.href = "/";
     } catch {
       window.location.href = "/";
     }

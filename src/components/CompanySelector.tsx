@@ -32,8 +32,8 @@ export function CompanySelector({
         const [{ data: memberships }, { data: assignments }] = await Promise.all([
           supabase.from("organization_members").select("org_id").order("created_at", { ascending: false }),
           uid
-            ? supabase.from("project_assignments").select("employer_org_id").eq("user_id", uid)
-            : supabase.from("project_assignments").select("employer_org_id"),
+            ? supabase.from("project_assignments").select("employer_org_id").eq("user_id", uid).not("accepted_at", "is", null)
+            : supabase.from("project_assignments").select("employer_org_id").not("accepted_at", "is", null),
         ]);
 
         const memberIds = (memberships ?? []).map((m: any) => m.org_id);

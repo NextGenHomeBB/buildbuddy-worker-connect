@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
+import { useNavigate } from "react-router-dom";
 
 interface AssignmentRow {
   id: string;
@@ -26,6 +27,7 @@ interface InviteRow {
 export default function Invitations() {
   const qc = useQueryClient();
   const { user } = useSession();
+  const navigate = useNavigate();
 
   // Pending direct assignments
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery<AssignmentRow[]>({
@@ -95,6 +97,8 @@ export default function Invitations() {
     onSuccess: () => {
       toast({ title: "Invitation accepted" });
       qc.invalidateQueries({ queryKey: ["invites"] });
+      const next = localStorage.getItem("employer_org_id") ? "/" : "/settings/company";
+      navigate(next, { replace: true });
     },
     onError: (e: any) => {
       const msg = e?.code === "403" || /row-level security/i.test(e?.message || "")
@@ -133,6 +137,8 @@ export default function Invitations() {
     onSuccess: () => {
       toast({ title: "Invitation accepted" });
       qc.invalidateQueries({ queryKey: ["invites"] });
+      const next = localStorage.getItem("employer_org_id") ? "/" : "/settings/company";
+      navigate(next, { replace: true });
     },
     onError: (e: any) => {
       const msg = e?.code === "403" || /row-level security|permission/i.test(e?.message || "")
