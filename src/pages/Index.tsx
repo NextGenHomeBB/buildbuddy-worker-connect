@@ -2,7 +2,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Clock } from "lucide-react";
@@ -17,6 +17,7 @@ export default function Index() {
   
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: activeTimer } = useQuery<any | null>({
     queryKey: ["activeTimer"],
     queryFn: async () => {
@@ -31,6 +32,28 @@ export default function Index() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const stopAndSubmit = useMutation({
+    mutationFn: async () => {
+      if (!activeTimer?.id) return;
+      const { error } = await supabase
+        .from("time_logs")
+        .update({ ended_at: new Date().toISOString(), status: "submitted" })
+        .eq("id", activeTimer.id)
+        .is("ended_at", null)
+        .eq("status", "draft");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      try { localStorage.removeItem("active_timer"); } catch {}
+      toast({ title: "Stopped and submitted" });
+      qc.invalidateQueries({ queryKey: ["activeTimer"] });
+      qc.invalidateQueries({ queryKey: ["timeLogs"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Action failed", description: e?.message || String(e) });
+    }
   });
 
   const { data: tasksDue = [] } = useQuery({
@@ -68,6 +91,13 @@ export default function Index() {
   return (
     <MobileLayout title="Home">
       <SEO title="Home" description="Clock in/out, see shifts and tasks" path="/" />
+
+      {activeTimer && (
+        <div className="rounded-lg border p-3 mb-4 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">Timer running ~{runningFor} min</div>
+          <Button size="sm" onClick={() => stopAndSubmit.mutate()}>Stop & Submit</Button>
+        </div>
+      )}
 
       <section className="grid gap-4">
         <Card>
