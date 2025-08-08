@@ -12,6 +12,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [creatingEmail, setCreatingEmail] = useState("");
+  const [creatingPassword, setCreatingPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const signInPassword = async (e: React.FormEvent) => {
@@ -99,6 +101,30 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  const signUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      cleanupAuthState();
+      const redirectUrl = `${window.location.origin}/`;
+      const { data, error } = await supabase.auth.signUp({
+        email: creatingEmail,
+        password: creatingPassword,
+        options: { emailRedirectTo: redirectUrl },
+      });
+      if (error) throw error;
+      if (data.user && !data.user.confirmed_at) {
+        toast({ title: "Check your email", description: "Confirm to finish sign up." });
+      } else {
+        toast({ title: "Account created" });
+      }
+    } catch (err: any) {
+      toast({ title: "Sign up failed", description: err?.message ?? String(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <MobileLayout title="Login">
       <SEO title="Login" description="Sign in to BuildBuddy Worker" path="/login" />
@@ -136,6 +162,25 @@ export default function Login() {
                 <Button type="submit" variant="secondary" disabled={loading}>Send magic link</Button>
                 <Button type="button" variant="outline" onClick={signupLink} disabled={loading}>Send sign-up link</Button>
               </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={signUp} className="grid gap-3">
+              <div className="grid gap-1">
+                <label className="text-sm">Email</label>
+                <Input type="email" value={creatingEmail} onChange={(e) => setCreatingEmail(e.target.value)} required />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Password</label>
+                <Input type="password" value={creatingPassword} onChange={(e) => setCreatingPassword(e.target.value)} required />
+              </div>
+              <Button type="submit" variant="secondary" disabled={loading}>Create account</Button>
             </form>
           </CardContent>
         </Card>
